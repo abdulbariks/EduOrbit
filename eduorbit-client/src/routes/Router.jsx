@@ -5,6 +5,11 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ErrorPage from "../pages/ErrorPage";
 import Home from "../pages/Home";
+import AppLayout from "../layouts/AppLayout";
+import ClassScheduleTracker from "../pages/ClassScheduleTracker";
+import BudgetTracker from "../pages/BudgetTracker";
+import ExamGenerator from "../pages/ExamGenerator";
+import StudyPlanner from "../pages/StudyPlanner";
 
 export const router = createBrowserRouter([
   {
@@ -16,16 +21,38 @@ export const router = createBrowserRouter([
         Component: Main,
       },
       {
-        path: "home",
-        Component: Home,
-      },
-      {
         path: "login",
         Component: Login,
       },
       {
         path: "register",
         Component: Register,
+      },
+    ],
+  },
+  {
+    path: "/",
+    Component: AppLayout,
+    children: [
+      {
+        path: "home",
+        Component: Home,
+      },
+      {
+        path: "class-schedule",
+        Component: ClassScheduleTracker,
+      },
+      {
+        path: "budget-tracker",
+        Component: BudgetTracker,
+      },
+      {
+        path: "exam-qa",
+        Component: ExamGenerator,
+      },
+      {
+        path: "study-planner",
+        Component: StudyPlanner,
       },
     ],
   },

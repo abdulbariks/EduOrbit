@@ -2,10 +2,10 @@ import React from "react";
 import { Navigate, Outlet } from "react-router";
 
 const MainLayout = () => {
-  const user = true;
+  const user = false;
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="p-4">
+    <div className="">
+      <main className="">
         <Outlet />
       </main>
       {/* Redirect after login */}
