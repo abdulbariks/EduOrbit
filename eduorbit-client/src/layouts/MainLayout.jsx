@@ -1,8 +1,9 @@
-import React from "react";
+import React, { use } from "react";
 import { Navigate, Outlet } from "react-router";
+import { AuthContext } from "../contexts/AuthContext";
 
 const MainLayout = () => {
-  const user = false;
+  const { user } = use(AuthContext);
   return (
     <div className="">
       <main className="">
