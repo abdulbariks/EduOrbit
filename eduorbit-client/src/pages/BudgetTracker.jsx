@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import axios from "axios";
 import {
   PieChart,
   Pie,
@@ -7,16 +8,27 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { AuthContext } from "../contexts/AuthContext";
 
 const COLORS = ["#4CAF50", "#F44336", "#2196F3", "#FFC107", "#9C27B0"];
 
 const BudgetTracker = () => {
+  const { user } = useContext(AuthContext);
   const [transactions, setTransactions] = useState([]);
   const [formData, setFormData] = useState({
     type: "income",
     description: "",
     amount: "",
   });
+
+  // Fetch transactions from backend
+  useEffect(() => {
+    if (!user?.email) return;
+    axios
+      .get(`http://localhost:5000/api/transactions?email=${user.email}`)
+      .then((res) => setTransactions(res.data))
+      .catch((err) => console.error(err));
+  }, [user]);
 
   const totalIncome = transactions
     .filter((t) => t.type === "income")
@@ -32,20 +44,37 @@ const BudgetTracker = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddTransaction = (e) => {
+  const handleAddTransaction = async (e) => {
     e.preventDefault();
     if (!formData.description || !formData.amount) return;
 
     const newTransaction = {
       ...formData,
       amount: parseFloat(formData.amount),
-      id: Date.now(),
+      userEmail: user.email,
     };
-    setTransactions([...transactions, newTransaction]);
-    setFormData({ type: "income", description: "", amount: "" });
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/transactions",
+        newTransaction
+      );
+      setTransactions([...transactions, res.data]);
+      setFormData({ type: "income", description: "", amount: "" });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Data for chart
+  const handleDeleteTransaction = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+      setTransactions(transactions.filter((t) => t._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const chartData = [
     { name: "Income", value: totalIncome },
     { name: "Expenses", value: totalExpenses },
@@ -119,18 +148,29 @@ const BudgetTracker = () => {
         ) : (
           <ul className="divide-y">
             {transactions.map((t) => (
-              <li key={t.id} className="flex justify-between items-center py-2">
+              <li
+                key={t._id}
+                className="flex justify-between items-center py-2"
+              >
                 <div>
                   <p className="font-medium">{t.description}</p>
                   <p className="text-sm text-gray-500">{t.type}</p>
                 </div>
-                <p
-                  className={`font-bold ${
-                    t.type === "income" ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {t.type === "income" ? "+" : "-"}${t.amount}
-                </p>
+                <div className="flex items-center gap-4">
+                  <p
+                    className={`font-bold ${
+                      t.type === "income" ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {t.type === "income" ? "+" : "-"}${t.amount}
+                  </p>
+                  <button
+                    onClick={() => handleDeleteTransaction(t._id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

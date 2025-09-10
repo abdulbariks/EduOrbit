@@ -26,7 +26,9 @@ const Sidebar = ({ open, toggleSidebar }) => {
           ${open ? "translate-x-0" : "-translate-x-full"} 
           md:translate-x-0 md:static md:flex md:flex-col`}
       >
-        <div className="p-6 text-2xl font-bold">EduOrbit</div>
+        <div className="p-6 text-2xl font-bold">
+          <Link to={"/"}>EduOrbit</Link>
+        </div>
 
         <nav className="flex-1 overflow-y-auto">
           <ul>

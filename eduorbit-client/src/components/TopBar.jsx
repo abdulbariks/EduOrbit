@@ -1,6 +1,17 @@
-import React from "react";
+import React, { useContext } from "react";
+import { AuthContext } from "../contexts/AuthContext";
+import { useNavigate } from "react-router";
 
 const TopBar = ({ toggleSidebar }) => {
+  const navigate = useNavigate();
+  const { user, logOut } = useContext(AuthContext);
+
+  const handleLogOut = () => {
+    logOut()
+      .then(() => navigate("/"))
+      .catch((error) => console.error("Logout error:", error));
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between md:justify-end py-4 px-4 border-b bg-white shadow-sm">
       {/* Sidebar toggle for mobile */}
@@ -25,18 +36,26 @@ const TopBar = ({ toggleSidebar }) => {
 
       {/* Right icons */}
       <div className="flex items-center space-x-4">
-        <button className="p-2 rounded-full hover:bg-gray-100">🌓</button>
-        <button className="relative p-2 rounded-full hover:bg-gray-100">
-          🔔
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-orange-400 rounded-full" />
-        </button>
-        <div className="flex items-center space-x-2 cursor-pointer">
+        {/* User info */}
+        <div className="flex items-center space-x-2">
           <img
-            src="https://i.pravatar.cc/32"
-            alt="User"
+            src={user?.photoURL}
+            alt={user?.displayName}
             className="w-8 h-8 rounded-full"
           />
-          <span className="font-semibold text-gray-700">Musharof</span>
+          <span className="font-semibold text-gray-700">
+            {user?.displayName}
+          </span>
+
+          {/* Logout button */}
+          {user && (
+            <button
+              onClick={handleLogOut}
+              className="ml-2 px-3 py-1 text-sm text-white bg-red-500 rounded hover:bg-red-600"
+            >
+              Logout
+            </button>
+          )}
         </div>
       </div>
     </div>

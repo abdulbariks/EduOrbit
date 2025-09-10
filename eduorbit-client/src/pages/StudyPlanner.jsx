@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { AuthContext } from "../contexts/AuthContext";
 
 const StudyPlanner = () => {
+  const { user } = useContext(AuthContext);
   const [tasks, setTasks] = useState([]);
   const [form, setForm] = useState({
     subject: "",
@@ -11,26 +14,56 @@ const StudyPlanner = () => {
     time: "",
   });
 
+  // Backend API URL
+  const API_URL = "http://localhost:5000/api/tasks";
+
+  // Fetch tasks from backend
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}?email=${user.email}`);
+        setTasks(data);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+      }
+    };
+    if (user?.email) fetchTasks();
+  }, [user]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const addTask = (e) => {
+  const addTask = async (e) => {
     e.preventDefault();
     if (!form.subject || !form.topic || !form.deadline) return;
-    setTasks([...tasks, { ...form, id: Date.now() }]);
-    setForm({
-      subject: "",
-      topic: "",
-      priority: "Medium",
-      deadline: "",
-      day: "",
-      time: "",
-    });
+
+    try {
+      const { data } = await axios.post(API_URL, {
+        ...form,
+        userEmail: user.email,
+      });
+      setTasks([data, ...tasks]); // add new task to the top
+      setForm({
+        subject: "",
+        topic: "",
+        priority: "Medium",
+        deadline: "",
+        day: "",
+        time: "",
+      });
+    } catch (err) {
+      console.error("Error adding task:", err);
+    }
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      setTasks(tasks.filter((task) => task._id !== id));
+    } catch (err) {
+      console.error("Error deleting task:", err);
+    }
   };
 
   const priorityColors = {
@@ -117,7 +150,7 @@ const StudyPlanner = () => {
           <ul className="space-y-4">
             {tasks.map((task) => (
               <li
-                key={task.id}
+                key={task._id}
                 className={`p-4 rounded-lg flex justify-between items-center shadow ${
                   priorityColors[task.priority]
                 }`}
@@ -133,7 +166,7 @@ const StudyPlanner = () => {
                   <p className="text-sm">🔥 Priority: {task.priority}</p>
                 </div>
                 <button
-                  onClick={() => deleteTask(task.id)}
+                  onClick={() => deleteTask(task._id)}
                   className="ml-4 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                 >
                   Delete

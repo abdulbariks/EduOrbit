@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { AuthContext } from "../contexts/AuthContext";
 
 const daysOfWeek = [
   "Monday",
@@ -10,16 +12,35 @@ const daysOfWeek = [
   "Sunday",
 ];
 
+const API_URL = "http://localhost:5000/api/classes";
+
 const ClassScheduleTracker = () => {
+  const { user } = useContext(AuthContext);
   const [classes, setClasses] = useState([]);
   const [formData, setFormData] = useState({
     subject: "",
     time: "",
     day: "Monday",
     instructor: "",
-    color: "#3b82f6", // default blue
+    color: "#3b82f6",
   });
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+
+  // Fetch classes on component mount
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const fetchClasses = async () => {
+      try {
+        const res = await axios.get(`${API_URL}?email=${user.email}`);
+        setClasses(res.data);
+      } catch (err) {
+        console.error("Error fetching classes:", err);
+      }
+    };
+
+    fetchClasses();
+  }, [user?.email]);
 
   const handleChange = (e) => {
     setFormData({
@@ -28,32 +49,60 @@ const ClassScheduleTracker = () => {
     });
   };
 
-  const handleAddOrUpdate = (e) => {
+  const handleAddOrUpdate = async (e) => {
     e.preventDefault();
-    if (editingIndex !== null) {
-      const updated = [...classes];
-      updated[editingIndex] = formData;
-      setClasses(updated);
-      setEditingIndex(null);
-    } else {
-      setClasses([...classes, formData]);
+    if (!user?.email) return;
+
+    try {
+      if (editingId) {
+        // Update class
+        const res = await axios.put(`${API_URL}/${editingId}`, {
+          ...formData,
+          userEmail: user.email,
+        });
+        setClasses(
+          classes.map((cls) => (cls._id === editingId ? res.data : cls))
+        );
+        setEditingId(null);
+      } else {
+        // Add class
+        const res = await axios.post(API_URL, {
+          ...formData,
+          userEmail: user.email,
+        });
+        setClasses([...classes, res.data]);
+      }
+
+      setFormData({
+        subject: "",
+        time: "",
+        day: "Monday",
+        instructor: "",
+        color: "#3b82f6",
+      });
+    } catch (err) {
+      console.error("Error adding/updating class:", err);
     }
+  };
+
+  const handleEdit = (cls) => {
     setFormData({
-      subject: "",
-      time: "",
-      day: "Monday",
-      instructor: "",
-      color: "#3b82f6",
+      subject: cls.subject,
+      time: cls.time,
+      day: cls.day,
+      instructor: cls.instructor,
+      color: cls.color,
     });
+    setEditingId(cls._id);
   };
 
-  const handleEdit = (index) => {
-    setFormData(classes[index]);
-    setEditingIndex(index);
-  };
-
-  const handleDelete = (index) => {
-    setClasses(classes.filter((_, i) => i !== index));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      setClasses(classes.filter((cls) => cls._id !== id));
+    } catch (err) {
+      console.error("Error deleting class:", err);
+    }
   };
 
   return (
@@ -115,7 +164,7 @@ const ClassScheduleTracker = () => {
           type="submit"
           className="col-span-1 md:col-span-2 bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
         >
-          {editingIndex !== null ? "Update Class" : "Add Class"}
+          {editingId ? "Update Class" : "Add Class"}
         </button>
       </form>
 
@@ -125,9 +174,9 @@ const ClassScheduleTracker = () => {
           <p className="text-gray-500 text-center">No classes added yet.</p>
         ) : (
           <ul className="space-y-3">
-            {classes.map((cls, index) => (
+            {classes.map((cls) => (
               <li
-                key={index}
+                key={cls._id}
                 className="flex justify-between items-center p-3 rounded-lg shadow"
                 style={{ borderLeft: `8px solid ${cls.color}` }}
               >
@@ -139,13 +188,13 @@ const ClassScheduleTracker = () => {
                 </div>
                 <div className="space-x-2">
                   <button
-                    onClick={() => handleEdit(index)}
+                    onClick={() => handleEdit(cls)}
                     className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(index)}
+                    onClick={() => handleDelete(cls._id)}
                     className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                   >
                     Delete

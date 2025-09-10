@@ -1,38 +1,30 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const morgan = require("morgan");
-const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
-const cors = require("cors");
-// const connectDB = require('./config/db');
-// const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import classRoutes from "./routes/classes.js";
+import transactionRoutes from "./routes/transactions.js";
+import taskRoutes from "./routes/tasks.js";
 
 dotenv.config();
-// connectDB();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(helmet());
-app.use(morgan("dev"));
-
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
-app.use(limiter);
-
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 
 // Routes
-// app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/classes', require('./routes/classRoutes'));
-// app.use('/api/transactions', require('./routes/transactionRoutes'));
-// app.use('/api/planner', require('./routes/plannerRoutes'));
-// app.use('/api/questions', require('./routes/questionRoutes'));
+app.use("/api/classes", classRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/tasks", taskRoutes);
 
-// health
-app.get("/", (req, res) => res.json({ ok: true, time: new Date() }));
-
-// Error handlers
-// app.use(notFound);
-// app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => console.log(err));
