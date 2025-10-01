@@ -15,7 +15,7 @@ const StudyPlanner = () => {
   });
 
   // Backend API URL
-  const API_URL = "http://localhost:5000/api/tasks";
+  const API_URL = "https://eduorbit-server.vercel.app/api/tasks";
 
   // Fetch tasks from backend
   useEffect(() => {

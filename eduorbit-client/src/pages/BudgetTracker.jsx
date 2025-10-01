@@ -25,7 +25,9 @@ const BudgetTracker = () => {
   useEffect(() => {
     if (!user?.email) return;
     axios
-      .get(`http://localhost:5000/api/transactions?email=${user.email}`)
+      .get(
+        `https://eduorbit-server.vercel.app/api/transactions?email=${user.email}`
+      )
       .then((res) => setTransactions(res.data))
       .catch((err) => console.error(err));
   }, [user]);
@@ -56,7 +58,7 @@ const BudgetTracker = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/transactions",
+        "https://eduorbit-server.vercel.app/api/transactions",
         newTransaction
       );
       setTransactions([...transactions, res.data]);
@@ -68,7 +70,9 @@ const BudgetTracker = () => {
 
   const handleDeleteTransaction = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/transactions/${id}`);
+      await axios.delete(
+        `https://eduorbit-server.vercel.app/api/transactions/${id}`
+      );
       setTransactions(transactions.filter((t) => t._id !== id));
     } catch (err) {
       console.error(err);

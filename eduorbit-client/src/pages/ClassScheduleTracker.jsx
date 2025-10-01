@@ -12,7 +12,7 @@ const daysOfWeek = [
   "Sunday",
 ];
 
-const API_URL = "http://localhost:5000/api/classes";
+const API_URL = "https://eduorbit-server.vercel.app/api/classes";
 
 const ClassScheduleTracker = () => {
   const { user } = useContext(AuthContext);
@@ -32,7 +32,7 @@ const ClassScheduleTracker = () => {
 
     const fetchClasses = async () => {
       try {
-        const res = await axios.get(`${API_URL}?email=${user.email}`);
+        const res = await axios.get(`${API_URL}?email=${user?.email}`);
         setClasses(res.data);
       } catch (err) {
         console.error("Error fetching classes:", err);
